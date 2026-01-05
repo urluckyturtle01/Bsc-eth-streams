@@ -1,107 +1,90 @@
-# BSC Swaps Dashboard
+# BSC & Ethereum Live Trading Feeds Dashboard
 
-Real-time Binance Smart Chain (BSC) swap events dashboard with live Kafka stream integration.
+Real-time cryptocurrency trading dashboard displaying live swap events from Binance Smart Chain (BSC) and Ethereum networks.
 
-## Overview
+## 🚀 Features
 
-This dashboard displays real-time BSC DEX swap events streamed from a Kafka topic. It provides a clean, filterable interface to monitor token swaps, trading activity, and market movements across the BSC network.
+- **Dual Network Support**: Monitor both BSC and Ethereum trading feeds simultaneously
+- **Real-time Updates**: Live streaming via Kafka WebSocket connections
+- **Advanced Filtering**: Filter by trade type (buy/sell), token contract, and DEX platform
+- **Modern UI**: Built with Next.js 15 and TailwindCSS for a responsive, beautiful interface
+- **Production Ready**: PM2 process management with auto-restart capabilities
 
-## Features
+## 📋 Tech Stack
 
-- **Real-time Events**: Live WebSocket connection to Kafka stream
-- **Event Filtering**: Filter by buy/sell type, platform/DEX, and token contract address
-- **Token Information**: View token symbols, contract addresses, and swap details
-- **Transaction Links**: Direct links to BSCScan for wallet addresses and transactions
-- **Modern UI**: Dark theme with responsive design
+- **Frontend**: Next.js 15, React 19, TypeScript, TailwindCSS
+- **Backend**: Node.js, Kafka, WebSockets, Protobuf
+- **Process Management**: PM2
+- **Data Sources**: Kafka topics for BSC and Ethereum swap events
 
-## Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Node.js WebSocket server
-- **Data**: Kafka (kafkajs), Protocol Buffers (protobufjs)
-
-## Kafka Configuration
-
-- **Broker**: 35.231.146.165:9092
-- **Topic**: bsc-swaps
-- **Format**: Protocol Buffers (protobuf)
-- **WebSocket Port**: 8083
-
-## Installation
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Build the Next.js app:
-```bash
-npm run build
-```
-
-## Running the Application
-
-### Development Mode
-
-Start both the Kafka WebSocket server and Next.js dev server:
-
-```bash
-# Terminal 1: Start Kafka WebSocket server
-node kafka-ws-server.js
-
-# Terminal 2: Start Next.js dev server
-npm run dev
-```
-
-The dashboard will be available at `http://localhost:3000` (or your configured port).
-
-### Production Mode with PM2
-
-Start both services with PM2:
-
-```bash
-pm2 start ecosystem.config.js
-```
-
-Monitor the services:
-
-```bash
-pm2 logs
-pm2 status
-```
-
-Stop the services:
-
-```bash
-pm2 stop all
-```
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-bsc-swaps-dashboard/
 ├── app/
-│   ├── events/
-│   │   └── page.tsx          # Main events page
-│   ├── hooks/
-│   │   └── useKafkaConsumer.tsx  # Kafka WebSocket hook
-│   ├── layout.tsx             # Root layout
-│   ├── page.tsx               # Home page (redirects to events)
-│   └── globals.css            # Global styles
-├── kafka-ws-server.js         # Kafka-to-WebSocket bridge
-├── package.json
-├── ecosystem.config.js        # PM2 configuration
-└── README.md
+│   ├── binance/          # BSC trading feed page
+│   ├── ethereum/         # Ethereum trading feed page
+│   ├── components/       # Shared React components
+│   │   └── FeedHeader.tsx
+│   └── hooks/            # Custom React hooks
+│       ├── useKafkaConsumer.tsx
+│       └── useEthKafkaConsumer.tsx
+├── kafka-ws-server.js    # BSC Kafka WebSocket server (port 8083)
+├── kafka-ws-eth-server.js # Ethereum Kafka WebSocket server (port 8084)
+└── ecosystem.config.js   # PM2 configuration
 ```
 
-## Protobuf Schema
+## 🔧 Installation
 
-The BSC swap events use the following protobuf schema:
+### Prerequisites
 
+- Node.js 20.x or higher
+- PM2 (for production deployment)
+- Access to Kafka broker at `35.231.146.165:9092`
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/urluckyturtle01/Bsc-eth-streams.git
+   cd Bsc-eth-streams
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Development mode**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:6050`
+
+4. **Production deployment with PM2**
+   ```bash
+   pm2 start ecosystem.config.js
+   pm2 save
+   ```
+
+## 📊 Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Next.js App | 6050 | Main web application |
+| BSC WebSocket | 8083 | Binance Smart Chain events stream |
+| Ethereum WebSocket | 8084 | Ethereum events stream |
+
+## 🎯 Kafka Topics
+
+- **BSC**: `bsc-swaps` - Binance Smart Chain swap events
+- **Ethereum**: `ethereum-swaps` - Ethereum swap events
+
+## 🔌 WebSocket Connections
+
+Both Kafka servers use protobuf encoding for efficient data transmission:
+
+### BSC Events Schema
 ```protobuf
-syntax = "proto3";
-package bsc_dex;
-
 message TradeEvent {
   string platform = 2;
   string price_native = 3;
@@ -111,99 +94,128 @@ message TradeEvent {
   string transaction_id = 7;
   TradeType trade_type = 8;
   string wallet_address = 9;
-  uint64 processing_time_us = 10;
-  uint64 block_number = 11;
-  string price_usd = 12;
-  string base_mint = 13;
-  string base_mint_symbol = 14;
-  string base_mint_name = 15;
-  string quote_mint = 16;
-  string quote_mint_symbol = 17;
-  string quote_mint_name = 18;
-  double total_network_fee = 19;
-  PnlMetrics pnl_mint_7d = 20;
-  double current_bnb_balance = 21;
-  double current_token_balance = 22;
-  string pool_address = 23;
-  optional double current_supply = 24;
-}
-
-enum TradeType {
-  TRADE_TYPE_UNSPECIFIED = 0;
-  TRADE_TYPE_BUY = 1;
-  TRADE_TYPE_SELL = 2;
+  // ... additional fields
 }
 ```
 
-## Configuration
-
-### Changing the Kafka Broker
-
-Edit `kafka-ws-server.js` and update the broker address:
-
-```javascript
-const kafka = new Kafka({
-  clientId: 'bsc-swaps-ws-consumer',
-  brokers: ['YOUR_BROKER:9092'],
-  // ...
-})
+### Ethereum Events Schema
+```protobuf
+message TradeEvent {
+  string platform = 2;
+  string price_native = 3;
+  double eth_amount = 4;
+  int64 timestamp = 5;
+  double token_amount = 6;
+  string transaction_id = 7;
+  TradeType trade_type = 8;
+  string wallet_address = 9;
+  // ... additional fields
+}
 ```
 
-### Changing the WebSocket Port
+## 📱 Usage
 
-Edit `kafka-ws-server.js` and update the port:
+### Switching Between Feeds
 
-```javascript
-const wss = new WebSocket.Server({ 
-  port: 8083,  // Change this port
-  // ...
-})
-```
+Use the header tabs to switch between BSC (Binance) and Ethereum feeds:
+- **Binance feed**: `/binance`
+- **Ethereum feed**: `/ethereum`
 
-Also update `app/hooks/useKafkaConsumer.tsx` to match:
+### Filtering Events
 
-```typescript
-const ws = new WebSocket(`${protocol}//${host}:8083`)  // Update port here
-```
+1. **Trade Type Filter**: Use "All", "Buys", or "Sells" tabs
+2. **Token Search**: Paste a token contract address in the search bar
+3. **DEX Filter**: Filter by specific decentralized exchanges
+4. **Clear**: Reset all filters
 
-### Changing the Next.js Port
+### Event Information
 
-For development:
+Each event displays:
+- Age (time since event)
+- Trade type (Buy/Sell)
+- Token symbol
+- Price (in USD)
+- Amount
+- Total USD value
+- Trader wallet address
+
+## 🔧 PM2 Management
+
+### View all processes
 ```bash
-npm run dev -- -p 3001
+pm2 list
 ```
 
-For production with PM2, edit `ecosystem.config.js`:
-```javascript
-env: {
-  NODE_ENV: 'production',
-  PORT: 3001  // Change this port
-}
-```
-
-## Troubleshooting
-
-### WebSocket Connection Issues
-
-1. Ensure the Kafka WebSocket server is running
-2. Check that port 8083 is not blocked by firewall
-3. Verify the Kafka broker is accessible
-
-### No Events Showing
-
-1. Check Kafka consumer connection in server logs
-2. Verify the topic name is correct ('bsc-swaps')
-3. Ensure the protobuf schema matches the incoming data
-
-### Build Errors
-
-If you encounter build errors, try:
+### View logs
 ```bash
-rm -rf .next node_modules
-npm install
-npm run build
+pm2 logs next-app       # Next.js logs
+pm2 logs kafka-bsc      # BSC Kafka server logs
+pm2 logs kafka-eth      # Ethereum Kafka server logs
 ```
 
-## License
+### Restart services
+```bash
+pm2 restart all
+pm2 restart next-app
+```
 
-Private/Proprietary
+### Stop services
+```bash
+pm2 stop all
+```
+
+## 🌐 Environment Variables
+
+The application uses the following environment variables:
+
+```env
+PORT=6050                    # Next.js application port
+NODE_ENV=production          # Environment mode
+```
+
+## 🔐 Data Flow
+
+1. **Kafka Broker** receives swap events from blockchain indexers
+2. **WebSocket Servers** consume from Kafka topics and decode protobuf messages
+3. **Frontend** connects via WebSocket and displays real-time updates
+4. Events are stamped with `receivedAt` timestamp for accurate age display
+
+## 📈 Performance
+
+- Real-time updates with sub-second latency
+- Client-side filtering for instant results
+- Efficient protobuf encoding reduces bandwidth
+- PM2 ensures high availability with auto-restart
+
+## 🛠️ Development
+
+### Project Structure
+
+- `app/`: Next.js application pages and components
+- `kafka-ws-server.js`: BSC Kafka consumer and WebSocket server
+- `kafka-ws-eth-server.js`: Ethereum Kafka consumer and WebSocket server
+- `ecosystem.config.js`: PM2 process configuration
+
+### Adding New Features
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📝 License
+
+This project is open source and available for use.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Support
+
+For issues and questions, please open an issue on GitHub.
+
+---
+
+Built with ❤️ for the crypto trading community
