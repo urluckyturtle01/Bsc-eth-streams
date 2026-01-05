@@ -1,198 +1,209 @@
-# Trending Pairs Dashboard 🚀
+# BSC Swaps Dashboard
 
-A real-time cryptocurrency trending pairs dashboard built with Next.js, React, and WebSocket integration. Monitor live token data from pump-fun and meteora-dbc DEXs with comprehensive metrics and interactive features.
+Real-time Binance Smart Chain (BSC) swap events dashboard with live Kafka stream integration.
 
-![Dashboard Preview](https://img.shields.io/badge/Status-Live-brightgreen)
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC)
+## Overview
 
-## ✨ Features
+This dashboard displays real-time BSC DEX swap events streamed from a Kafka topic. It provides a clean, filterable interface to monitor token swaps, trading activity, and market movements across the BSC network.
 
-### 🔄 Real-Time Data
-- **Live WebSocket Connection** - Real-time updates from trending pairs API
-- **Dual DEX Support** - Switch between pump-fun and meteora-dbc
-- **Auto-Reconnection** - Robust connection handling with automatic retry
-- **Category Updates** - Handles incremental field updates efficiently
+## Features
 
-### 📊 Smart Filtering & Display
-- **25 Tokens Per Category** - Shows top 25 newest tokens for each status
-- **Dynamic Categories** - Filter by New, Migrating, and Migrated tokens
-- **Newest First Sorting** - Tokens sorted by creation timestamp
-- **Auto-Replacement** - New tokens replace oldest when limit exceeded
+- **Real-time Events**: Live WebSocket connection to Kafka stream
+- **Event Filtering**: Filter by buy/sell type, platform/DEX, and token contract address
+- **Token Information**: View token symbols, contract addresses, and swap details
+- **Transaction Links**: Direct links to BSCScan for wallet addresses and transactions
+- **Modern UI**: Dark theme with responsive design
 
-### 💎 Modern Card Design
-- **Compact Layout** - 3 cards per row with optimized spacing
-- **Token Information** - Symbol, name, mint address, and age
-- **Price Display** - Smart formatting with subscript zeros (e.g., $0.0₅5)
-- **Interactive Elements** - Clickable mint addresses and copy functionality
+## Tech Stack
 
-### 📈 Comprehensive Metrics
-- **Holder Analytics** - Holder count, dev %, sniper %, top 10 holders %
-- **Trading Data** - Volume, market cap, transaction counts
-- **Visual Indicators** - Buy/sell ratio bars with color coding
-- **SVG Icons** - Clean line icons for all metrics
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Node.js WebSocket server
+- **Data**: Kafka (kafkajs), Protocol Buffers (protobufjs)
 
-### 🔗 External Integrations
-- **Solscan Links** - Direct links to token pages on Solscan
-- **Copy to Clipboard** - One-click mint address copying
-- **New Tab Opening** - External links open in new tabs
+## Kafka Configuration
 
-## 🛠️ Tech Stack
+- **Broker**: 35.231.146.165:9092
+- **Topic**: bsc-swaps
+- **Format**: Protocol Buffers (protobuf)
+- **WebSocket Port**: 8083
 
-- **Framework**: Next.js 14 with TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **Real-time**: WebSocket API integration
-- **State Management**: React hooks (useState, useEffect, useMemo)
-- **Icons**: Heroicons SVG library
-- **Build Tool**: Turbopack for fast development
+## Installation
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/trending-pairs.git
-   cd trending-pairs
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-4. **Open in browser**
-   ```
-   http://localhost:3000
-   ```
-
-## 📱 Usage
-
-### Basic Navigation
-1. **Select DEX** - Choose between Pump Fun or Meteora DBC from dropdown
-2. **Filter Tokens** - Click category buttons (New/Migrating/Migrated)
-3. **View Details** - Each card shows comprehensive token information
-4. **Interact** - Click mint addresses to open Solscan, copy with icon
-
-### Data Understanding
-- **Holders** 👥 - Total number of unique token holders
-- **Dev %** 📊 - Percentage of supply held by developer
-- **Sniper %** 🔥 - Percentage held by sniper wallets  
-- **Top 10 %** ⭐ - Percentage held by top 10 holders
-- **TX Bar** - Green (buys) vs Red (sells) ratio visualization
-
-## 🔧 Configuration
-
-### WebSocket Connection
-The dashboard connects to: `ws://34.107.31.9/ws/trending-pairs`
-
-### Supported DEXs
-- **pump-fun** - Pump.fun DEX tokens
-- **meteora-dbc** - Meteora DBC tokens
-
-### Display Limits
-- **25 tokens per category** - Maintains performance
-- **Auto-refresh** - Real-time updates every few seconds
-- **Smart caching** - Efficient data management
-
-## 🏗️ Architecture
-
-### Components Structure
-```
-app/
-├── components/
-│   ├── TrendingPairsDashboard.tsx    # Main dashboard
-│   ├── TrendingPairCard.tsx          # Individual token cards
-│   ├── StatusFilter.tsx              # Category filter buttons
-│   └── WebSocketTester.tsx           # Debug component
-├── hooks/
-│   └── useWebSocket.tsx              # WebSocket management
-└── utils/
-    └── mockData.ts                   # Development utilities
+1. Install dependencies:
+```bash
+npm install
 ```
 
-### Key Features Implementation
-- **Real-time Updates**: Custom useWebSocket hook with reconnection
-- **Data Processing**: Transforms raw WebSocket data into typed interfaces
-- **UI Components**: Modular, reusable React components
-- **State Management**: Efficient React hooks with proper dependency arrays
-
-## 🎨 Design System
-
-### Colors
-- **Background**: Dark theme (#0a0a0b, #111113)
-- **Accent Colors**: Blue (#3b82f6), Green (#10b981), Yellow (#f59e0b)
-- **Status Colors**: Green (New), Yellow (Migrating), Blue (Migrated)
-
-### Typography
-- **Font**: Inter from Google Fonts
-- **Hierarchy**: Various text sizes from xs to 2xl
-- **Weight**: Regular to bold based on importance
-
-### Layout
-- **Grid**: 3-column responsive grid
-- **Spacing**: Consistent 12px, 16px, 24px increments
-- **Cards**: Rounded corners, subtle borders, hover effects
-
-## 🔍 Development
-
-### Debug Features
-- **Console Logging** - Detailed WebSocket message logging
-- **Connection Status** - Visual connection indicators
-- **Data Validation** - Warns about inconsistent data
-
-### Testing Components
-- **WebSocketTester** - Manual WebSocket testing interface
-- **Mock Data** - Development data for offline testing
-
-## 📦 Build & Deploy
-
-### Production Build
+2. Build the Next.js app:
 ```bash
 npm run build
-npm start
 ```
 
-### Deploy Options
-- **Vercel** - Recommended for Next.js projects
-- **Netlify** - Static site deployment
-- **Docker** - Containerized deployment
+## Running the Application
 
-## 🤝 Contributing
+### Development Mode
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Start both the Kafka WebSocket server and Next.js dev server:
 
-## 📄 License
+```bash
+# Terminal 1: Start Kafka WebSocket server
+node kafka-ws-server.js
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Terminal 2: Start Next.js dev server
+npm run dev
+```
 
-## 🙏 Acknowledgments
+The dashboard will be available at `http://localhost:3000` (or your configured port).
 
-- **WebSocket API** - Real-time data provider
-- **Heroicons** - Beautiful SVG icon library
-- **Tailwind CSS** - Utility-first CSS framework
-- **Next.js Team** - Amazing React framework
+### Production Mode with PM2
 
----
+Start both services with PM2:
 
-**Built with ❤️ by the Trending Pairs Team**
+```bash
+pm2 start ecosystem.config.js
+```
 
-For issues and feature requests, please [open an issue](https://github.com/yourusername/trending-pairs/issues).
+Monitor the services:
+
+```bash
+pm2 logs
+pm2 status
+```
+
+Stop the services:
+
+```bash
+pm2 stop all
+```
+
+## Project Structure
+
+```
+bsc-swaps-dashboard/
+├── app/
+│   ├── events/
+│   │   └── page.tsx          # Main events page
+│   ├── hooks/
+│   │   └── useKafkaConsumer.tsx  # Kafka WebSocket hook
+│   ├── layout.tsx             # Root layout
+│   ├── page.tsx               # Home page (redirects to events)
+│   └── globals.css            # Global styles
+├── kafka-ws-server.js         # Kafka-to-WebSocket bridge
+├── package.json
+├── ecosystem.config.js        # PM2 configuration
+└── README.md
+```
+
+## Protobuf Schema
+
+The BSC swap events use the following protobuf schema:
+
+```protobuf
+syntax = "proto3";
+package bsc_dex;
+
+message TradeEvent {
+  string platform = 2;
+  string price_native = 3;
+  double bnb_amount = 4;
+  int64 timestamp = 5;
+  double token_amount = 6;
+  string transaction_id = 7;
+  TradeType trade_type = 8;
+  string wallet_address = 9;
+  uint64 processing_time_us = 10;
+  uint64 block_number = 11;
+  string price_usd = 12;
+  string base_mint = 13;
+  string base_mint_symbol = 14;
+  string base_mint_name = 15;
+  string quote_mint = 16;
+  string quote_mint_symbol = 17;
+  string quote_mint_name = 18;
+  double total_network_fee = 19;
+  PnlMetrics pnl_mint_7d = 20;
+  double current_bnb_balance = 21;
+  double current_token_balance = 22;
+  string pool_address = 23;
+  optional double current_supply = 24;
+}
+
+enum TradeType {
+  TRADE_TYPE_UNSPECIFIED = 0;
+  TRADE_TYPE_BUY = 1;
+  TRADE_TYPE_SELL = 2;
+}
+```
+
+## Configuration
+
+### Changing the Kafka Broker
+
+Edit `kafka-ws-server.js` and update the broker address:
+
+```javascript
+const kafka = new Kafka({
+  clientId: 'bsc-swaps-ws-consumer',
+  brokers: ['YOUR_BROKER:9092'],
+  // ...
+})
+```
+
+### Changing the WebSocket Port
+
+Edit `kafka-ws-server.js` and update the port:
+
+```javascript
+const wss = new WebSocket.Server({ 
+  port: 8083,  // Change this port
+  // ...
+})
+```
+
+Also update `app/hooks/useKafkaConsumer.tsx` to match:
+
+```typescript
+const ws = new WebSocket(`${protocol}//${host}:8083`)  // Update port here
+```
+
+### Changing the Next.js Port
+
+For development:
+```bash
+npm run dev -- -p 3001
+```
+
+For production with PM2, edit `ecosystem.config.js`:
+```javascript
+env: {
+  NODE_ENV: 'production',
+  PORT: 3001  // Change this port
+}
+```
+
+## Troubleshooting
+
+### WebSocket Connection Issues
+
+1. Ensure the Kafka WebSocket server is running
+2. Check that port 8083 is not blocked by firewall
+3. Verify the Kafka broker is accessible
+
+### No Events Showing
+
+1. Check Kafka consumer connection in server logs
+2. Verify the topic name is correct ('bsc-swaps')
+3. Ensure the protobuf schema matches the incoming data
+
+### Build Errors
+
+If you encounter build errors, try:
+```bash
+rm -rf .next node_modules
+npm install
+npm run build
+```
+
+## License
+
+Private/Proprietary

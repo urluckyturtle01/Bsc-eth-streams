@@ -1,60 +1,36 @@
 module.exports = {
   apps: [
     {
-      name: 'kafka-ws-server',
-      script: 'kafka-ws-server.js',
-      cwd: '/root/trending-pairs-dashboard',
-      env: {
-        NODE_ENV: 'production'
-      },
-      instances: 1,
+      name: 'next-app',
+      script: 'npm',
+      args: 'run dev',
       exec_mode: 'fork',
+      env: {
+        PORT: 6050,
+        NODE_ENV: 'development'
+      },
       watch: false,
-      max_memory_restart: '1G',
-      error_file: './logs/kafka-ws-err.log',
-      out_file: './logs/kafka-ws-out.log',
-      log_file: './logs/kafka-ws-combined.log',
-      time: true,
+      instances: 1,
       autorestart: true,
-      max_restarts: 10
+      max_memory_restart: '1G'
     },
     {
-      name: 'trending-pairs-dashboard',
-      script: 'npm',
-      args: 'start',
-      cwd: '/root/trending-pairs-dashboard',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3000,
-        HOST: '0.0.0.0'
-      },
-      instances: 1,
+      name: 'kafka-bsc',
+      script: './kafka-ws-server.js',
       exec_mode: 'fork',
       watch: false,
-      max_memory_restart: '1G',
-      error_file: './logs/dashboard-err.log',
-      out_file: './logs/dashboard-out.log',
-      log_file: './logs/dashboard-combined.log',
-      time: true
+      instances: 1,
+      autorestart: true,
+      max_memory_restart: '500M'
     },
     {
-      name: 'tp-dash',
-      script: 'npm',
-      args: 'start',
-      cwd: '/root/tp-dash',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 5050,
-        HOST: '0.0.0.0'
-      },
-      instances: 1,
+      name: 'kafka-eth',
+      script: './kafka-ws-eth-server.js',
       exec_mode: 'fork',
       watch: false,
-      max_memory_restart: '1G',
-      error_file: './logs/tp-dash-err.log',
-      out_file: './logs/tp-dash-out.log',
-      log_file: './logs/tp-dash-combined.log',
-      time: true
+      instances: 1,
+      autorestart: true,
+      max_memory_restart: '500M'
     }
   ]
-};
+}

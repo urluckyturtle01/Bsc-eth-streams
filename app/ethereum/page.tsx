@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
-import { useKafkaConsumer } from '../hooks/useKafkaConsumer'
+import { useEthKafkaConsumer } from '../hooks/useEthKafkaConsumer'
+import FeedHeader from '../components/FeedHeader'
 
-const EventsPage: React.FC = () => {
-  const { events, isConnected, error, connect, disconnect, clearEvents } = useKafkaConsumer()
+const EthereumPage: React.FC = () => {
+  const { events, isConnected, error, connect, disconnect, clearEvents } = useEthKafkaConsumer()
   const [filter, setFilter] = useState<'all' | 'buy' | 'sell'>('all')
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'pump-fun' | 'raydium-amm-v4' | 'meteora-dbc' | 'meteora-damm-v2'>('all')
+  const [platformFilter, setPlatformFilter] = useState<'all' | string>('all')
   const [mintFilter, setMintFilter] = useState<string>('')
   const [copiedMints, setCopiedMints] = useState<Set<string>>(new Set())
   const [copiedWallets, setCopiedWallets] = useState<Set<string>>(new Set())
@@ -44,7 +44,7 @@ const EventsPage: React.FC = () => {
       }
       
       setCopiedMints(prev => new Set(prev).add(mintAddress))
-      console.log('Copied mint address:', mintAddress)
+      console.log('Copied contract address:', mintAddress)
       
       // Remove the mint from copied set after 1 second
       setTimeout(() => {
@@ -55,7 +55,7 @@ const EventsPage: React.FC = () => {
         })
       }, 1000)
     } catch (err) {
-      console.error('Failed to copy mint address:', err)
+      console.error('Failed to copy contract address:', err)
     }
   }
 
@@ -94,64 +94,16 @@ const EventsPage: React.FC = () => {
     }
   }
 
-  const getConnectionStatus = () => {
-    if (isConnected) {
-      return (
-        <div className="flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-xs">
-          <div className="w-2 h-2 bg-green-400 rounded-xs animate-pulse"></div>
-          <span className="text-xs text-green-400 font-medium">Connected</span>
-        </div>
-      )
-    } else if (error) {
-      return (
-        <div className="flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-xs">
-          <div className="w-2 h-2 bg-red-400 rounded-xs"></div>
-          <span className="text-xs text-red-400 font-medium">Error</span>
-        </div>
-      )
-    } else {
-      return (
-          <div className="flex items-center gap-2 bg-yellow-500/20 px-3 py-1 rounded-xs">
-          <div className="w-2 h-2 bg-yellow-400 rounded-xs animate-pulse"></div>
-          <span className="text-xs text-yellow-400 font-medium">Connecting</span>
-        </div>
-      )
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="max-w-none mx-auto px-12 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-md font-medium text-gray-400">Live Trading Feed</h1>
-            
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-gray-400 text-sm hover:text-gray-300 transition-colors">Trending Pairs</Link>
-            {getConnectionStatus()}
-            <button
-              onClick={isConnected ? disconnect : connect}
-              className={`p-2 rounded-xs transition-colors ${
-                isConnected 
-                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                  : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-              }`}
-              title={isConnected ? 'Pause live updates' : 'Start live updates'}
-            >
-              {isConnected ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
+        <FeedHeader 
+          isConnected={isConnected}
+          error={error}
+          onConnect={connect}
+          onDisconnect={disconnect}
+        />
 
         {/* Centered Filters */}
         <div className="mb-8">
@@ -164,7 +116,7 @@ const EventsPage: React.FC = () => {
                   type="text"
                   value={mintFilter}
                   onChange={(e) => setMintFilter(e.target.value)}
-                  placeholder="Paste mint address to filter events..."
+                  placeholder="Paste token contract address to filter events..."
                   className="w-full px-6 py-2 bg-gray-950 border border-gray-800 rounded-xs text-gray-400 placeholder-gray-600 focus:outline-none focus:border-gray-600 text-md"
                 />
                 {mintFilter && (
@@ -193,39 +145,7 @@ const EventsPage: React.FC = () => {
                   platformFilter === 'all' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
-                All
-              </button>
-              <button
-                onClick={() => setPlatformFilter('pump-fun')}
-                className={`px-3 py-1 rounded-xs text-xs transition-colors ${
-                  platformFilter === 'pump-fun' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                Pump
-              </button>
-              <button
-                onClick={() => setPlatformFilter('raydium-amm-v4')}
-                className={`px-3 py-1 rounded-xs text-xs transition-colors ${
-                  platformFilter === 'raydium-amm-v4' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                Raydium
-              </button>
-              <button
-                onClick={() => setPlatformFilter('meteora-dbc')}
-                className={`px-3 py-1 rounded-xs text-xs transition-colors ${
-                  platformFilter === 'meteora-dbc' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                Meteora DBC
-              </button>
-              <button
-                onClick={() => setPlatformFilter('meteora-damm-v2')}
-                className={`px-3 py-1 rounded-xs text-xs transition-colors ${
-                  platformFilter === 'meteora-damm-v2' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                Meteora DAMM
+                All DEXs
               </button>
               <div className="w-px h-4 bg-gray-600 mx-2"></div>
               <button
@@ -346,16 +266,20 @@ const EventsPage: React.FC = () => {
               </div>
                 <div className="text-gray-500 text-sm mb-6">
                 {isConnected 
-                  ? 'Waiting for bonding curve trade events...' 
+                  ? 'Waiting for Ethereum swap events...' 
                   : 'Click connect to start receiving events'
                 }
               </div>
             </div>
           ) : (
               filteredEvents.map((event, index) => {
-                const age = Math.floor((Date.now() - parseInt(event.timestamp) * 1000) / 1000 / 60) // minutes ago
+                const age = Math.floor((Date.now() - (event.receivedAt || Date.now())) / 1000 / 60) // minutes ago
                 const isBuy = event.tradeType === 1
-                const totalUSD = parseFloat(event.priceUsd || '0') * event.tokenAmount
+                // Ethereum data has priceUsd as "0", so calculate from ETH amount
+                // Assuming ~$3400 per ETH as approximate (ideally get from API)
+                const ETH_PRICE_USD = 3400
+                const priceUsdCalculated = parseFloat(event.priceNative || '0') * ETH_PRICE_USD
+                const totalUSD = event.ethAmount * ETH_PRICE_USD
                 
                 const formatAddress = (address: string) => {
                   return `${address.slice(0, 6)}...${address.slice(-6)}`
@@ -390,12 +314,9 @@ const EventsPage: React.FC = () => {
 
                     {/* Token */}
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => window.open(`/token/${event.baseMint}`, '_blank')}
-                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium"
-                      >
+                      <div className="text-sm text-blue-400 font-medium">
                         {event.baseMintSymbol || 'Unknown'}
-                      </button>
+                      </div>
                       <button
                         onClick={() => handleCopyMint(event.baseMint)}
                         className={`transition-colors ${
@@ -403,7 +324,7 @@ const EventsPage: React.FC = () => {
                             ? 'text-green-400' 
                             : 'text-gray-500 hover:text-green-400'
                         }`}
-                        title="Copy mint address"
+                        title="Copy contract address"
                       >
                         {copiedMints.has(event.baseMint) ? (
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,7 +342,7 @@ const EventsPage: React.FC = () => {
                     <div className={`text-sm font-medium ${
                       isBuy ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      ${parseFloat(event.priceUsd || '0').toFixed(6)}
+                      ${priceUsdCalculated.toFixed(6)}
                     </div>
 
                     {/* Amount */}
@@ -442,7 +363,7 @@ const EventsPage: React.FC = () => {
                         {/* Trader emoji/icon */}
                        
                         <button
-                          onClick={() => window.open(`https://solscan.io/account/${event.walletAddress}`, '_blank')}
+                          onClick={() => window.open(`https://etherscan.io/address/${event.walletAddress}`, '_blank')}
                           className="text-sm text-gray-300 hover:text-blue-400 transition-colors"
                         >
                           {event.walletAddress.slice(0, 4)}...{event.walletAddress.slice(-4)}
@@ -452,7 +373,7 @@ const EventsPage: React.FC = () => {
                           <button
                             onClick={() => handleCopyWallet(event.walletAddress, `wallet-${event.walletAddress}-${event.timestamp}`)}
                             className={`transition-colors ${
-                              copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`) 
+                              copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`)
                                 ? 'text-green-400' 
                                 : 'text-gray-500 hover:text-gray-300'
                             }`}
@@ -469,7 +390,7 @@ const EventsPage: React.FC = () => {
                             )}
                           </button>
                           <button
-                            onClick={() => window.open(`https://solscan.io/tx/${event.transactionId}`, '_blank')}
+                            onClick={() => window.open(`https://etherscan.io/tx/${event.transactionId}`, '_blank')}
                             className="text-gray-500 hover:text-gray-300 transition-colors"
                             title="View transaction"
                           >
@@ -490,8 +411,7 @@ const EventsPage: React.FC = () => {
           {filteredEvents.length > 0 && (
             <div className="border-t border-gray-800 bg-gray-900/50 px-6 py-3">
               <div className="flex items-center justify-between text-sm text-gray-400">
-               
-                
+                <div className="text-xs">Showing {filteredEvents.length} events</div>
               </div>
             </div>
           )}
@@ -501,4 +421,5 @@ const EventsPage: React.FC = () => {
   )
 }
 
-export default EventsPage
+export default EthereumPage
+

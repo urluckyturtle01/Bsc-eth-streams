@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trending Pairs Dashboard",
-  description: "Real-time cryptocurrency trending pairs dashboard",
+  title: "BSC Swaps Dashboard",
+  description: "Real-time Binance Smart Chain swap events dashboard",
 };
 
 export default function RootLayout({

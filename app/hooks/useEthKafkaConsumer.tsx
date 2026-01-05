@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-// TypeScript interfaces based on BSC swaps protobuf schema
+// TypeScript interfaces based on Ethereum swaps protobuf schema
 export interface PnlMetrics {
   unrealizedPnlUsd: number
   unrealizedPnlPct: number
@@ -10,10 +10,10 @@ export interface PnlMetrics {
   realizedPnlPct: number
 }
 
-export interface TradeEvent {
+export interface EthTradeEvent {
   platform: string
   priceNative: string
-  bnbAmount: number
+  ethAmount: number
   timestamp: string
   tokenAmount: number
   transactionId: string
@@ -30,15 +30,15 @@ export interface TradeEvent {
   quoteMintName: string
   totalNetworkFee: number
   pnlMint7d?: PnlMetrics
-  currentBnbBalance: number
+  currentEthBalance: number
   currentTokenBalance: number
   poolAddress: string
   currentSupply?: number
   receivedAt?: number  // Client-side timestamp when event was received
 }
 
-export const useKafkaConsumer = () => {
-  const [events, setEvents] = useState<TradeEvent[]>([])
+export const useEthKafkaConsumer = () => {
+  const [events, setEvents] = useState<EthTradeEvent[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const eventSourceRef = useRef<WebSocket | null>(null)
@@ -62,16 +62,16 @@ export const useKafkaConsumer = () => {
     disconnect()
     setError(null)
     
-    // Connect to our WebSocket server - use port 8083 for BSC swaps
+    // Connect to our WebSocket server - use port 8084 for Ethereum swaps
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.hostname
-    const ws = new WebSocket(`${protocol}//${host}:8083`)
+    const ws = new WebSocket(`${protocol}//${host}:8084`)
     eventSourceRef.current = ws
 
     ws.onopen = () => {
       setIsConnected(true)
       setError(null)
-      console.log('✅ Connected to BSC swaps stream')
+      console.log('✅ Connected to Ethereum swaps stream')
     }
 
     ws.onmessage = (event) => {
@@ -84,7 +84,7 @@ export const useKafkaConsumer = () => {
           return
         }
         
-        const tradeEvent: TradeEvent = {
+        const tradeEvent: EthTradeEvent = {
           ...data,
           receivedAt: Date.now()  // Add client-side timestamp
         }
@@ -118,13 +118,13 @@ export const useKafkaConsumer = () => {
     }
 
     ws.onerror = () => {
-      setError('Connection lost to BSC swaps stream')
+      setError('Connection lost to Ethereum swaps stream')
       setIsConnected(false)
     }
     
     ws.onclose = () => {
       setIsConnected(false)
-      console.log('❌ Disconnected from BSC swaps stream')
+      console.log('❌ Disconnected from Ethereum swaps stream')
     }
   }, [disconnect])
 
@@ -157,3 +157,4 @@ export const useKafkaConsumer = () => {
     clearEvents
   }
 }
+

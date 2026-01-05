@@ -1,5 +1,18 @@
-import TrendingPairsDashboard from './components/TrendingPairsDashboard'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
-  return <TrendingPairsDashboard />
+  const router = useRouter()
+  
+  useEffect(() => {
+    router.push('/binance')
+  }, [router])
+  
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="text-gray-400">Redirecting to Binance feed...</div>
+    </div>
+  )
 }

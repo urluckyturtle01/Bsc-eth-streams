@@ -1,16 +1,17 @@
 {
-  "name": "trending-pairs",
+  "name": "bsc-swaps-dashboard",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 6050",
     "build": "next build --turbopack",
-    "start": "next start",
+    "start": "next start -p 6050",
     "lint": "eslint"
   },
   "dependencies": {
     "@types/protobufjs": "^6.0.0",
     "kafkajs": "^2.2.4",
+    "lz4js": "^0.2.0",
     "next": "15.5.3",
     "protobufjs": "^7.5.4",
     "react": "19.1.0",
