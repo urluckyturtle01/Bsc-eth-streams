@@ -50,19 +50,19 @@ Real-time cryptocurrency trading dashboard displaying live swap events from Bina
    ```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. **Development mode**
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
    The application will be available at `http://localhost:6050`
 
 4. **Production deployment with PM2**
-   ```bash
-   pm2 start ecosystem.config.js
+```bash
+pm2 start ecosystem.config.js
    pm2 save
    ```
 

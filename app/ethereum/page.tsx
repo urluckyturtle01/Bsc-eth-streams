@@ -11,6 +11,48 @@ const EthereumPage: React.FC = () => {
   const [mintFilter, setMintFilter] = useState<string>('')
   const [copiedMints, setCopiedMints] = useState<Set<string>>(new Set())
   const [copiedWallets, setCopiedWallets] = useState<Set<string>>(new Set())
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+
+  // Helper function to format values, showing "null" for missing data
+  const formatValue = (value: any, type: 'number' | 'string' = 'string'): string => {
+    if (value === null || value === undefined || value === '' || value === 0) {
+      return 'null'
+    }
+    if (type === 'number' && typeof value === 'number') {
+      return value.toLocaleString()
+    }
+    return String(value)
+  }
+
+  const handleCopyAny = async (text: string, id: string, setState: React.Dispatch<React.SetStateAction<Set<string>>>) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+      
+      setState(prev => new Set(prev).add(id))
+      setTimeout(() => {
+        setState(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
+      }, 1000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
 
   const filteredEvents = events.filter(event => {
     const typeMatch = filter === 'all' || 
@@ -215,50 +257,25 @@ const EthereumPage: React.FC = () => {
           </div>
 
           {/* Table Header */}
-          <div className="border-b border-gray-800 bg-gray-900/50">
-            <div className="grid grid-cols-7 gap-4 px-6 py-3 text-sm font-medium text-gray-400">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Age
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-                Type
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-                Token
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Price
-              </div>
-              <div>Amount</div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Total USD
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Trader
-              </div>
+          <div className="border-b border-gray-800 bg-gray-900/50 overflow-x-auto">
+            <div className="grid grid-cols-[50px_60px_180px_120px_100px_100px_90px_100px_100px_80px_140px_90px] gap-4 px-6 py-3 text-xs font-semibold text-gray-400 min-w-max">
+              <div>AGE</div>
+              <div>TYPE</div>
+              <div>TOKEN</div>
+              <div>DEX</div>
+              <div className="text-right">PRICE USD</div>
+              <div className="text-right">PRICE ETH</div>
+              <div className="text-right">AMOUNT</div>
+              <div className="text-right">ETH AMOUNT</div>
+              <div className="text-right">TOTAL USD</div>
+              <div className="text-right">GAS</div>
+              <div>TRADER</div>
+              <div className="text-right">PNL 7D</div>
             </div>
           </div>
 
           {/* Table Body */}
-          <div className="max-h-[600px] overflow-y-auto">
+          <div className="max-h-[600px] overflow-x-auto overflow-y-auto">
           {filteredEvents.length === 0 ? (
             <div className="text-center py-20">
               <div className="text-gray-400 text-lg mb-2">
@@ -273,134 +290,372 @@ const EthereumPage: React.FC = () => {
             </div>
           ) : (
               filteredEvents.map((event, index) => {
-                const age = Math.floor((Date.now() - (event.receivedAt || Date.now())) / 1000 / 60) // minutes ago
+                const age = Math.floor((Date.now() - (event.receivedAt || Date.now())) / 1000 / 60)
                 const isBuy = event.tradeType === 1
-                // Ethereum data has priceUsd as "0", so calculate from ETH amount
-                // Assuming ~$3400 per ETH as approximate (ideally get from API)
-                const ETH_PRICE_USD = 3400
-                const priceUsdCalculated = parseFloat(event.priceNative || '0') * ETH_PRICE_USD
-                const totalUSD = event.ethAmount * ETH_PRICE_USD
+                const ETH_PRICE_USD_APPROX = 3400
+                const priceUsdStr = event.priceUsd && parseFloat(event.priceUsd) > 0 ? event.priceUsd : null
+                const priceNative = parseFloat(event.priceNative || '0')
+                const priceUsdCalculated = priceUsdStr ? parseFloat(priceUsdStr) : (priceNative > 0 ? priceNative * ETH_PRICE_USD_APPROX : 0)
+                const totalUSD = event.ethAmount * ETH_PRICE_USD_APPROX
                 
-                const formatAddress = (address: string) => {
-                  return `${address.slice(0, 6)}...${address.slice(-6)}`
+                const formatNumber = (num: number) => {
+                  if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`
+                  if (num >= 1000) return `${(num / 1000).toFixed(2)}K`
+                  return num.toFixed(2)
                 }
                 
-                const formatTokenAmount = (amount: number) => {
-                  if (amount >= 1000000) {
-                    return `${(amount / 1000000).toFixed(2)}M`
-                  } else if (amount >= 1000) {
-                    return `${(amount / 1000).toFixed(2)}K`
-                  } else {
-                    return amount.toFixed(2)
-                  }
-                }
+                const hasPnl = event.pnlMint7d && (
+                  event.pnlMint7d.realizedPnlUsd !== 0 || 
+                  event.pnlMint7d.unrealizedPnlUsd !== 0
+                )
+                
+                const eventId = `${event.transactionId}-${event.baseMint}`
+                const isExpanded = expandedRows.has(eventId)
                 
                 return (
+                  <div key={eventId} className="border-b border-gray-800/50">
                   <div 
-                    key={`${event.transactionId}-${event.baseMint}-${event.timestamp}`}
-                    className="grid grid-cols-7 gap-4 px-6 py-4 border-b border-gray-800/50 hover:bg-gray-900/30 transition-colors"
+                    onClick={() => {
+                      const newExpanded = new Set(expandedRows)
+                      if (isExpanded) {
+                        newExpanded.delete(eventId)
+                      } else {
+                        newExpanded.add(eventId)
+                      }
+                      setExpandedRows(newExpanded)
+                    }}
+                    className="grid grid-cols-[50px_60px_180px_120px_100px_100px_90px_100px_100px_80px_140px_90px] gap-4 px-6 py-3 hover:bg-gray-900/30 transition-colors text-xs min-w-max cursor-pointer"
                   >
                     {/* Age */}
-                    <div className="text-gray-400 text-sm">
+                    <div className="text-gray-400">
                       {age}m
                     </div>
 
                     {/* Type */}
-                    <div className={`text-sm font-medium ${
-                      isBuy ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <div className={`font-medium ${isBuy ? 'text-green-400' : 'text-red-400'}`}>
                       {isBuy ? 'Buy' : 'Sell'}
                     </div>
 
-                    {/* Token */}
+                    {/* Token - Full Info */}
                     <div className="flex items-center gap-2">
-                      <div className="text-sm text-blue-400 font-medium">
-                        {event.baseMintSymbol || 'Unknown'}
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-semibold truncate ${event.baseMintSymbol ? 'text-blue-400' : 'text-gray-600'}`}>
+                          {event.baseMintSymbol || 'null'}
+                        </div>
+                        <div className="text-gray-600 text-[10px] truncate">
+                          {event.baseMintName || 'null'}
+                        </div>
                       </div>
                       <button
-                        onClick={() => handleCopyMint(event.baseMint)}
-                        className={`transition-colors ${
-                          copiedMints.has(event.baseMint) 
-                            ? 'text-green-400' 
-                            : 'text-gray-500 hover:text-green-400'
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCopyMint(event.baseMint)
+                        }}
+                        className={`flex-shrink-0 transition-colors ${
+                          copiedMints.has(event.baseMint) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'
                         }`}
-                        title="Copy contract address"
+                        title="Copy contract"
                       >
-                        {copiedMints.has(event.baseMint) ? (
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        )}
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedMints.has(event.baseMint) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                        </svg>
                       </button>
                     </div>
 
-                    {/* Price */}
-                    <div className={`text-sm font-medium ${
-                      isBuy ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      ${priceUsdCalculated.toFixed(6)}
+                    {/* DEX Platform */}
+                    <div className="text-purple-400 text-[10px] uppercase font-medium truncate">
+                      {event.platform ? event.platform.replace(/-/g, ' ') : 'null'}
                     </div>
 
-                    {/* Amount */}
-                    <div className="text-white text-sm">
-                      {formatTokenAmount(event.tokenAmount)}
+                    {/* Price USD */}
+                    <div className={`font-semibold text-right whitespace-nowrap ${priceUsdCalculated > 0 ? (isBuy ? 'text-green-400' : 'text-red-400') : 'text-gray-600'}`}>
+                      {priceUsdCalculated > 0 ? `$${priceUsdCalculated.toFixed(6)}` : 'null'}
+                    </div>
+
+                    {/* Price ETH */}
+                    <div className={`text-right whitespace-nowrap ${priceNative > 0 ? 'text-blue-400' : 'text-gray-600'}`}>
+                      {priceNative > 0 ? priceNative.toFixed(8) : 'null'}
+                    </div>
+
+                    {/* Token Amount */}
+                    <div className="text-white text-right font-medium">
+                      {event.tokenAmount > 0 ? formatNumber(event.tokenAmount) : 'null'}
+                    </div>
+
+                    {/* ETH Amount */}
+                    <div className="text-blue-400 text-right whitespace-nowrap font-medium">
+                      {event.ethAmount > 0 ? event.ethAmount.toFixed(4) : 'null'}
                     </div>
 
                     {/* Total USD */}
-                    <div className={`text-sm font-medium ${
-                      isBuy ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      ${totalUSD < 1 ? totalUSD.toFixed(3) : totalUSD.toFixed(0)}
+                    <div className={`font-bold text-right whitespace-nowrap ${totalUSD > 0 ? (isBuy ? 'text-green-400' : 'text-red-400') : 'text-gray-600'}`}>
+                      {totalUSD > 0 ? `$${totalUSD < 1 ? totalUSD.toFixed(3) : formatNumber(totalUSD)}` : 'null'}
                     </div>
 
-                    {/* Trader */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        {/* Trader emoji/icon */}
-                       
+                    {/* Gas Fee */}
+                    <div className="text-gray-400 text-right whitespace-nowrap text-[10px]">
+                      {event.totalNetworkFee > 0 ? event.totalNetworkFee.toFixed(6) : 'null'}
+                    </div>
+
+                    {/* Trader - Detailed */}
+                    <div>
+                      <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => window.open(`https://etherscan.io/address/${event.walletAddress}`, '_blank')}
-                          className="text-sm text-gray-300 hover:text-blue-400 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.open(`https://etherscan.io/address/${event.walletAddress}`, '_blank')
+                          }}
+                          className="text-gray-300 hover:text-blue-400 transition-colors font-mono text-[11px]"
                         >
-                          {event.walletAddress.slice(0, 4)}...{event.walletAddress.slice(-4)}
+                          {event.walletAddress.slice(0, 6)}...{event.walletAddress.slice(-4)}
                         </button>
-                        {/* Copy/Link icons */}
-                        <div className="flex items-center gap-1 ml-1">
-                          <button
-                            onClick={() => handleCopyWallet(event.walletAddress, `wallet-${event.walletAddress}-${event.timestamp}`)}
-                            className={`transition-colors ${
-                              copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`)
-                                ? 'text-green-400' 
-                                : 'text-gray-500 hover:text-gray-300'
-                            }`}
-                            title="Copy wallet address"
-                          >
-                            {copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`) ? (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleCopyWallet(event.walletAddress, `wallet-${event.walletAddress}-${event.timestamp}`)
+                          }}
+                          className={`transition-colors ${
+                            copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`) ? 'text-green-400' : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                          title="Copy wallet"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedWallets.has(`wallet-${event.walletAddress}-${event.timestamp}`) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">
+                        {event.currentEthBalance > 0 ? `${event.currentEthBalance.toFixed(2)} ETH` : 'null'}
+                      </div>
+                    </div>
+
+                    {/* PnL 7d */}
+                    <div className="text-right">
+                      {hasPnl ? (
+                        <div className="text-[10px]">
+                          <div className={`font-semibold ${event.pnlMint7d!.realizedPnlUsd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            ${event.pnlMint7d!.realizedPnlUsd.toFixed(0)}
+                          </div>
+                          <div className="text-gray-500">
+                            {event.pnlMint7d!.realizedPnlPct >= 0 ? '+' : ''}{event.pnlMint7d!.realizedPnlPct.toFixed(1)}%
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-600 text-[10px]">null</div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="px-6 py-4 bg-gray-900/50 text-xs">
+                      <div className="grid grid-cols-3 gap-6">
+                        {/* Column 1: Token Details */}
+                        <div className="space-y-2.5">
+                          <div className="text-gray-400 font-semibold mb-3 text-sm">📝 Token Details</div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Base Contract:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-blue-400 font-mono text-[11px]">{event.baseMint.slice(0, 8)}...{event.baseMint.slice(-6)}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCopyMint(event.baseMint)
+                                }}
+                                className={`transition-colors ${copiedMints.has(event.baseMint) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'}`}
+                                title="Copy"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedMints.has(event.baseMint) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Quote Token:</span>
+                            <span className={`font-medium ${event.quoteMintSymbol ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {event.quoteMintSymbol || 'null'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Quote Name:</span>
+                            <span className={event.quoteMintName ? 'text-gray-300' : 'text-gray-600'}>
+                              {event.quoteMintName || 'null'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Quote Contract:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 font-mono text-[11px]">{event.quoteMint ? `${event.quoteMint.slice(0, 6)}...${event.quoteMint.slice(-4)}` : 'null'}</span>
+                              {event.quoteMint && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCopyAny(event.quoteMint, `quote-${event.quoteMint}`, setCopiedMints)
+                                  }}
+                                  className={`transition-colors ${copiedMints.has(`quote-${event.quoteMint}`) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'}`}
+                                  title="Copy"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedMints.has(`quote-${event.quoteMint}`) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Total Supply:</span>
+                            <span className={`font-medium ${event.currentSupply ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {event.currentSupply ? formatNumber(event.currentSupply) : 'null'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Token Balance:</span>
+                            <span className={`font-medium ${event.currentTokenBalance ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {event.currentTokenBalance ? formatNumber(event.currentTokenBalance) : 'null'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Column 2: Transaction Details */}
+                        <div className="space-y-2.5">
+                          <div className="text-gray-400 font-semibold mb-3 text-sm">⛓️ Transaction Details</div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Block Number:</span>
+                            <span className={`font-mono ${event.blockNumber ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {event.blockNumber || 'null'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Processing Time:</span>
+                            <span className={event.processingTimeUs ? 'text-gray-300' : 'text-gray-600'}>
+                              {event.processingTimeUs ? `${event.processingTimeUs}μs` : 'null'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Transaction Hash:</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.open(`https://etherscan.io/tx/${event.transactionId}`, '_blank')
+                                }}
+                                className="text-blue-400 hover:text-blue-300 font-mono text-[11px]"
+                              >
+                                {event.transactionId.slice(0, 8)}...{event.transactionId.slice(-6)}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCopyAny(event.transactionId, `tx-${event.transactionId}`, setCopiedWallets)
+                                }}
+                                className={`transition-colors ${copiedWallets.has(`tx-${event.transactionId}`) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'}`}
+                                title="Copy"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedWallets.has(`tx-${event.transactionId}`) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Pool Address:</span>
+                            {event.poolAddress ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    window.open(`https://etherscan.io/address/${event.poolAddress}`, '_blank')
+                                  }}
+                                  className="text-blue-400 hover:text-blue-300 font-mono text-[11px]"
+                                >
+                                  {event.poolAddress.slice(0, 6)}...{event.poolAddress.slice(-4)}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCopyAny(event.poolAddress, `pool-${event.poolAddress}`, setCopiedWallets)
+                                  }}
+                                  className={`transition-colors ${copiedWallets.has(`pool-${event.poolAddress}`) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'}`}
+                                  title="Copy"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedWallets.has(`pool-${event.poolAddress}`) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                                  </svg>
+                                </button>
+                              </div>
                             ) : (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
+                              <span className="text-gray-600">null</span>
                             )}
-                          </button>
-                          <button
-                            onClick={() => window.open(`https://etherscan.io/tx/${event.transactionId}`, '_blank')}
-                            className="text-gray-500 hover:text-gray-300 transition-colors"
-                            title="View transaction"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </button>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Wallet & PnL */}
+                        <div className="space-y-2.5">
+                          <div className="text-gray-400 font-semibold mb-3 text-sm">💰 Wallet & Performance</div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Wallet Address:</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.open(`https://etherscan.io/address/${event.walletAddress}`, '_blank')
+                                }}
+                                className="text-gray-300 hover:text-blue-400 font-mono text-[11px]"
+                              >
+                                {event.walletAddress.slice(0, 8)}...{event.walletAddress.slice(-6)}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCopyWallet(event.walletAddress, `detail-${event.walletAddress}`)
+                                }}
+                                className={`transition-colors ${copiedWallets.has(`detail-${event.walletAddress}`) ? 'text-green-400' : 'text-gray-500 hover:text-green-400'}`}
+                                title="Copy"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={copiedWallets.has(`detail-${event.walletAddress}`) ? "M5 13l4 4L19 7" : "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"} />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">ETH Balance:</span>
+                            <span className="text-blue-400 font-semibold">{event.currentEthBalance > 0 ? `${event.currentEthBalance.toFixed(4)} ETH` : 'null'}</span>
+                          </div>
+                          {event.pnlMint7d && hasPnl && (
+                            <>
+                              <div className="border-t border-gray-800 pt-2 mt-2"></div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Realized PnL:</span>
+                                <span className={`font-semibold ${event.pnlMint7d.realizedPnlUsd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  ${event.pnlMint7d.realizedPnlUsd.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Realized PnL %:</span>
+                                <span className={`font-semibold ${event.pnlMint7d.realizedPnlPct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {event.pnlMint7d.realizedPnlPct >= 0 ? '+' : ''}{event.pnlMint7d.realizedPnlPct.toFixed(2)}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Unrealized PnL:</span>
+                                <span className={`font-medium ${event.pnlMint7d.unrealizedPnlUsd >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  ${event.pnlMint7d.unrealizedPnlUsd.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Unrealized PnL %:</span>
+                                <span className={`font-medium ${event.pnlMint7d.unrealizedPnlPct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {event.pnlMint7d.unrealizedPnlPct >= 0 ? '+' : ''}{event.pnlMint7d.unrealizedPnlPct.toFixed(2)}%
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
+                  )}
                   </div>
                 )
               })
