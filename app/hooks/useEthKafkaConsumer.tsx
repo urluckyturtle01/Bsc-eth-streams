@@ -118,13 +118,23 @@ export const useEthKafkaConsumer = () => {
     }
 
     ws.onerror = () => {
-      setError('Connection lost to Ethereum swaps stream')
-      setIsConnected(false)
+      // Suppress error logging - onclose will handle reconnection
     }
     
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       setIsConnected(false)
       console.log('❌ Disconnected from Ethereum swaps stream')
+      
+      // Only set error if it's not a normal closure
+      if (event.code !== 1000 && event.code !== 1001) {
+        setError('Connection lost - attempting to reconnect...')
+      }
+      
+      // Auto-reconnect after 5 seconds
+      setTimeout(() => {
+        console.log('🔄 Attempting to reconnect to Ethereum...')
+        connect()
+      }, 5000)
     }
   }, [disconnect])
 

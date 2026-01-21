@@ -64,6 +64,16 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({ isConnected, error, onConnect, 
           >
             Ethereum feed
           </Link>
+          <Link 
+            href="/base"
+            className={`px-4 py-2 rounded-xs text-sm font-medium transition-colors ${
+              pathname === '/base' 
+                ? 'text-white' 
+                : ' text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            Base feed
+          </Link>
         </div>
       </div>
       <div className="flex items-center gap-3">

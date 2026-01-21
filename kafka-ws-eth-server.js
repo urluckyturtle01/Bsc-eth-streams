@@ -112,8 +112,45 @@ async function startKafkaConsumer() {
             objects: true
           })
           
+          // Convert snake_case to camelCase for frontend
+          const camelCaseObj = {
+            platform: jsonObj.platform,
+            priceNative: jsonObj.priceNative || jsonObj.price_native,
+            ethAmount: jsonObj.ethAmount || jsonObj.eth_amount,
+            timestamp: jsonObj.timestamp,
+            tokenAmount: jsonObj.tokenAmount || jsonObj.token_amount,
+            transactionId: jsonObj.transactionId || jsonObj.transaction_id,
+            tradeType: jsonObj.tradeType || jsonObj.trade_type,
+            walletAddress: jsonObj.walletAddress || jsonObj.wallet_address,
+            processingTimeUs: jsonObj.processingTimeUs || jsonObj.processing_time_us,
+            blockNumber: jsonObj.blockNumber || jsonObj.block_number,
+            priceUsd: jsonObj.priceUsd || jsonObj.price_usd,
+            baseMint: jsonObj.baseMint || jsonObj.base_mint,
+            baseMintSymbol: jsonObj.baseMintSymbol || jsonObj.base_mint_symbol,
+            baseMintName: jsonObj.baseMintName || jsonObj.base_mint_name,
+            quoteMint: jsonObj.quoteMint || jsonObj.quote_mint,
+            quoteMintSymbol: jsonObj.quoteMintSymbol || jsonObj.quote_mint_symbol,
+            quoteMintName: jsonObj.quoteMintName || jsonObj.quote_mint_name,
+            totalNetworkFee: jsonObj.totalNetworkFee || jsonObj.total_network_fee,
+            pnlMint7d: jsonObj.pnlMint7d || (jsonObj.pnlMint_7d && (
+              jsonObj.pnlMint_7d.unrealizedPnlUsd !== 0 || 
+              jsonObj.pnlMint_7d.unrealizedPnlPct !== 0 ||
+              jsonObj.pnlMint_7d.realizedPnlUsd !== 0 ||
+              jsonObj.pnlMint_7d.realizedPnlPct !== 0
+            ) ? {
+              unrealizedPnlUsd: jsonObj.pnlMint_7d.unrealizedPnlUsd || 0,
+              unrealizedPnlPct: jsonObj.pnlMint_7d.unrealizedPnlPct || 0,
+              realizedPnlUsd: jsonObj.pnlMint_7d.realizedPnlUsd || 0,
+              realizedPnlPct: jsonObj.pnlMint_7d.realizedPnlPct || 0
+            } : null),
+            currentEthBalance: jsonObj.currentEthBalance || jsonObj.current_eth_balance,
+            currentTokenBalance: jsonObj.currentTokenBalance || jsonObj.current_token_balance,
+            poolAddress: jsonObj.poolAddress || jsonObj.pool_address,
+            currentSupply: jsonObj.currentSupply || jsonObj.current_supply
+          }
+          
           // Broadcast to clients
-          const data = JSON.stringify(jsonObj)
+          const data = JSON.stringify(camelCaseObj)
           clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
               client.send(data)

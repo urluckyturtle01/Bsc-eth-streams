@@ -17,8 +17,8 @@ const LZ4Codec = () => ({
 CompressionCodecs[CompressionTypes.LZ4] = LZ4Codec
 
 const kafka = new Kafka({
-  clientId: 'bsc-swaps-ws-consumer',
-  brokers: ['35.231.146.165:9092'],
+  clientId: 'base-swaps-ws-consumer',
+  brokers: ['34.23.171.4:9092'],
   retry: {
     initialRetryTime: 1000,
     retries: 5
@@ -26,20 +26,20 @@ const kafka = new Kafka({
 })
 
 const consumer = kafka.consumer({ 
-  groupId: 'bsc-ws-group',
+  groupId: 'base-ws-group',
   sessionTimeout: 6000,
   heartbeatInterval: 2000
 })
 
-// Initialize protobuf schema for BSC swaps
+// Initialize protobuf schema for Base swaps
 const protoSchema = `
   syntax = "proto3";
-  package bsc_dex;
+  package base_dex;
   
   message TradeEvent {
     string platform = 2;
     string price_native = 3;
-    double bnb_amount = 4;
+    double eth_amount = 4;
     int64 timestamp = 5;
     double token_amount = 6;
     string transaction_id = 7;
@@ -56,10 +56,10 @@ const protoSchema = `
     string quote_mint_name = 18;
     double total_network_fee = 19;
     PnlMetrics pnl_mint_7d = 20;
-    double current_bnb_balance = 21;
+    double current_eth_balance = 21;
     double current_token_balance = 22;
     string pool_address = 23;
-    double current_supply = 24;
+    optional double current_supply = 24;
   }
   
   message PnlMetrics {
@@ -81,8 +81,8 @@ let clients = new Set()
 
 async function initProtobuf() {
   const root = protobuf.parse(protoSchema).root
-  TradeEvent = root.lookupType('bsc_dex.TradeEvent')
-  console.log('✅ Protobuf schema initialized for BSC swaps')
+  TradeEvent = root.lookupType('base_dex.TradeEvent')
+  console.log('✅ Protobuf schema initialized for Base swaps')
 }
 
 async function startKafkaConsumer() {
@@ -92,10 +92,10 @@ async function startKafkaConsumer() {
     console.log('✅ Kafka connected')
     
     await consumer.subscribe({ 
-      topic: 'bsc-swaps',
+      topic: 'base-swaps',
       fromBeginning: false 
     })
-    console.log('✅ Subscribed to bsc-swaps')
+    console.log('✅ Subscribed to base-swaps')
     
     await consumer.run({
       eachMessage: async ({ message }) => {
@@ -112,11 +112,11 @@ async function startKafkaConsumer() {
             objects: true
           })
           
-          // Convert snake_case to camelCase for frontend (matching Ethereum feed approach)
+          // Convert snake_case to camelCase for frontend
           const camelCaseObj = {
             platform: jsonObj.platform,
             priceNative: jsonObj.priceNative || jsonObj.price_native,
-            bnbAmount: jsonObj.bnbAmount || jsonObj.bnb_amount,
+            ethAmount: jsonObj.ethAmount || jsonObj.eth_amount,
             timestamp: jsonObj.timestamp,
             tokenAmount: jsonObj.tokenAmount || jsonObj.token_amount,
             transactionId: jsonObj.transactionId || jsonObj.transaction_id,
@@ -143,7 +143,7 @@ async function startKafkaConsumer() {
               realizedPnlUsd: jsonObj.pnl_mint_7d.realized_pnl_usd || 0,
               realizedPnlPct: jsonObj.pnl_mint_7d.realized_pnl_pct || 0
             } : null)),
-            currentBnbBalance: jsonObj.currentBnbBalance || jsonObj.current_bnb_balance,
+            currentEthBalance: jsonObj.currentEthBalance || jsonObj.current_eth_balance,
             currentTokenBalance: jsonObj.currentTokenBalance || jsonObj.current_token_balance,
             poolAddress: jsonObj.poolAddress || jsonObj.pool_address,
             currentSupply: jsonObj.currentSupply || jsonObj.current_supply
@@ -169,21 +169,21 @@ async function startKafkaConsumer() {
   }
 }
 
-// Create WebSocket server
+// Create WebSocket server on port 8085 for Base
 const wss = new WebSocket.Server({ 
-  port: 8083,
+  port: 8085,
   perMessageDeflate: false
 })
 
 wss.on('connection', (ws) => {
-  console.log('👋 Client connected')
+  console.log('👋 Client connected to Base stream')
   clients.add(ws)
   
   // Send connection confirmation
-  ws.send(JSON.stringify({ type: 'connected', message: 'WebSocket connected to BSC swaps stream' }))
+  ws.send(JSON.stringify({ type: 'connected', message: 'WebSocket connected to Base swaps stream' }))
   
   ws.on('close', () => {
-    console.log('👋 Client disconnected')
+    console.log('👋 Client disconnected from Base stream')
     clients.delete(ws)
   })
   
@@ -193,7 +193,7 @@ wss.on('connection', (ws) => {
   })
 })
 
-console.log('🚀 WebSocket server started on port 8083 for BSC swaps')
+console.log('🚀 WebSocket server started on port 8085 for Base swaps')
 
 // Initialize and start
 async function start() {
@@ -210,3 +210,4 @@ process.on('SIGINT', async () => {
 })
 
 start().catch(console.error)
+
